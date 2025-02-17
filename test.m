@@ -11,18 +11,19 @@ V_oc = 40; % Open-circuit voltage (V)
 I_sc = 8.5; % Short-circuit current (A)
 G_ref = 1000; % Reference irradiance (W/m^2)
 
-%% Elevation & Air Mass Correction
-elevation = 1000; % Elevation in meters (example: 1000m above sea level)
-AM_correction = exp(-elevation / 8000); % Approximate correction factor for AM effect
+%% Given NASA Data (Hourly from 7 AM to 6 PM)
+time = 7:18; % Time in hours (7 AM to 6 PM)
+G = [2, 171, 395, 585, 722, 793, 793, 723, 588, 398, 175, 2]; % Irradiance (W/m^2)
+T_op = [19, 21, 22, 24, 27, 29, 31, 32, 30, 27, 26, 23]; % Temperature (°C)
 
-%% Dynamic Irradiance & Temperature Profile (Simulating a Full Day)
-time = linspace(0, 12, 100); % 0 to 12 hours (morning to evening)
-G = (100 + 900 * sin(pi * time / 12)) .* AM_correction; % Adjusted irradiance with elevation
-T_op = (20 + 10 * sin(pi * time / 12)) - (elevation * 0.0065); % Temperature correction with elevation
+%% Elevation & Air Mass Correction
+elevation = 1000; % Elevation in meters
+AM_correction = exp(-elevation / 8000); % Approximate correction factor for AM effect
+G = G .* AM_correction; % Adjust irradiance for elevation
 
 %% Solar Angle & Effective Irradiance (Angle of Incidence Correction)
 panel_tilt = 30; % Panel tilt angle in degrees
-solar_altitude = 90 - abs(time - 6) * 15; % Approximate solar altitude angle
+solar_altitude = 90 - abs(time - 12) * 15; % Approximate solar altitude angle
 incidence_angle = abs(panel_tilt - solar_altitude); % Angle of incidence
 G_effective = G .* cosd(incidence_angle); % Effective irradiance on panel
 G_effective(G_effective < 0) = 0; % Ensure no negative irradiance
@@ -69,14 +70,12 @@ plot(time, G, 'r', 'LineWidth', 2);
 hold on;
 plot(time, T_op, 'b', 'LineWidth', 2);
 legend('Irradiance (W/m^2)', 'Temperature (°C)');
-xlabel('Time (hours)'); ylabel('G & T'); title('Solar Irradiance & Temperature with Elevation');
+xlabel('Time (hours)'); ylabel('G & T'); title('Solar Irradiance & Temperature from NASA Data');
 
-title('Solar Irradiance & Temperature with Elevation');
 subplot(3,1,2);
 plot(time, G_effective, 'm', 'LineWidth', 2);
 xlabel('Time (hours)'); ylabel('G Effective (W/m^2)'); title('Effective Irradiance with Angle of Incidence');
 
-title('Effective Irradiance with Angle of Incidence');
 subplot(3,1,3);
 plot(time, P_MPPT, 'k', 'LineWidth', 2);
 xlabel('Time (hours)'); ylabel('Power (W)'); title('MPPT Power Output');
